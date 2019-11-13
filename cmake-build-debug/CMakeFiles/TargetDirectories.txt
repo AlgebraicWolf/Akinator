@@ -1,0 +1,3 @@
+/home/alexey/Programming/Akinator/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/home/alexey/Programming/Akinator/cmake-build-debug/CMakeFiles/Akinator.dir
+/home/alexey/Programming/Akinator/cmake-build-debug/CMakeFiles/edit_cache.dir
