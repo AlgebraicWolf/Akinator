@@ -9,6 +9,12 @@
 /home/alexey/Programming/Akinator/main.cpp
 cstdio
 -
+cassert
+-
+cstdlib
+-
+cstring
+-
 ../Tree/Tree.h
 /home/alexey/Programming/Tree/Tree.h
 
