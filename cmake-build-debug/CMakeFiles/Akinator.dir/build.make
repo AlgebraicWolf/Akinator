@@ -79,6 +79,7 @@ Akinator_EXTERNAL_OBJECTS =
 
 Akinator: CMakeFiles/Akinator.dir/main.cpp.o
 Akinator: CMakeFiles/Akinator.dir/build.make
+Akinator: libTree.a
 Akinator: CMakeFiles/Akinator.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/alexey/Programming/Akinator/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable Akinator"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/Akinator.dir/link.txt --verbose=$(VERBOSE)

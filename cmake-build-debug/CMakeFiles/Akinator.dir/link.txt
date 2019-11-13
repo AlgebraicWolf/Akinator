@@ -1,1 +1,1 @@
-/usr/bin/g++  -g   CMakeFiles/Akinator.dir/main.cpp.o  -o Akinator 
+/usr/bin/g++  -g   CMakeFiles/Akinator.dir/main.cpp.o  -o Akinator libTree.a 
