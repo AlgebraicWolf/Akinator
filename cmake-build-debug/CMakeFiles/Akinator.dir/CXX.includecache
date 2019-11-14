@@ -15,6 +15,10 @@ cstdlib
 -
 cstring
 -
+clocale
+-
+ncurses.h
+-
 ../Tree/Tree.h
 /home/alexey/Programming/Tree/Tree.h
 

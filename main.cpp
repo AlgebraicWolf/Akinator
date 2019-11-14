@@ -2,6 +2,8 @@
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
+#include <clocale>
+#include <ncurses.h>
 #include "../Tree/Tree.h"
 
 enum VOICES {
@@ -41,20 +43,77 @@ void say(const char *prompt, VOICES voice, EMOTIONS emotion);
 void akinatorPlayNode(node_t *node);
 
 int main() {
-
-
+    setlocale (LC_ALL, "");
+    initscr();
     char *serializedDT = loadFile("decisionTreeSerialized.txt");
     tree_t *decisionTree = treeDeserialize(serializedDT, deserializePrompt);
     // say("Дерево решений загружено.", FILIPP, NEUTRAL);
     say("Привет! Сыграем в игру? Загадай персонажа, и я отгадаю его!", ALENA, NEUTRAL);
 
     akinatorPlayNode(decisionTree->head);
-
+    getch();
+    endwin();
     return 0;
 }
 
 void *deserializePrompt(char *ser) {
     return ser;
+}
+
+int askMode() {
+    char modes[][20] = {"Играть", "Сравнить", "Вывести", "Выйти"};
+}
+
+int askYesNo() {
+    curs_set(0);
+    keypad(stdscr, true);
+    noecho();
+    int pos = 0;
+    int ch = 0;
+    int x = 0;
+    int y = 0;
+    getyx(stdscr, y, x);
+    while(ch != 10) {
+        switch (ch) {
+            case KEY_RIGHT:
+                pos += 1;
+                break;
+
+            case KEY_LEFT:
+                pos -= 1;
+                break;
+        }
+        if (pos == 2) pos = 0;
+        else if (pos == -1) pos = 1;
+
+        if (pos == 0) {
+            attron(A_STANDOUT);
+            mvprintw(y, x, "Да");
+            attroff(A_STANDOUT);
+            printw(" Нет");
+        }
+
+        if (pos == 1) {
+            mvprintw(y, x, "Да ");
+            attron(A_STANDOUT);
+            printw("Нет");
+            attroff(A_STANDOUT);
+        }
+
+        ch = wgetch(stdscr);
+    }
+
+    keypad(stdscr, false);
+    echo();
+    nodelay(stdscr, false);
+
+    if(pos == 0)
+        mvprintw(y, x, "Ваш ответ: Да\n");
+
+    if(pos == 1)
+        mvprintw(y, x, "Ваш ответ: Нет\n");
+    refresh();
+    return pos;
 }
 
 size_t getFilesize(FILE *f) {
@@ -144,20 +203,21 @@ void akinatorPlayNode(node_t *node) {
     if(!node->right && !node->left) {
         char *str = (char *) calloc(SUBQUESTION_SIZE + strlen((char *) node->value), sizeof(char));
         sprintf(str, "Вы загадали %s, не так ли?\n", (char *) node->value);
-        printf("%s", str);
+        printw("%s", str);
         say(str, ALENA, NEUTRAL);
     } else {
         char *str = (char *) calloc(SUBQUESTION_SIZE + strlen((char *) node->value), sizeof(char));
         sprintf(str, "%s?\n", (char *) node->value);
-        printf("%s", str);
+        printw("%s", str);
         say(str, ALENA, NEUTRAL);
-        char answer[5] = "";
-        while (strcmp(answer, "y") && strcmp(answer, "n")) {
-            printf("Ответ: ");
-            scanf("%s", answer);
-        }
+        int ans = askYesNo();
+//        char answer[5] = "";
+//        while (strcmp(answer, "y") && strcmp(answer, "n")) {
+//            printw("Ответ: ");
+//            scanw("%s", answer);
+//        }
 
-        if (strcmp(answer, "y") == 0)
+        if (ans == 0)
             akinatorPlayNode(node->right);
         else
             akinatorPlayNode(node->left);

@@ -7,4 +7,4 @@ add_executable(Akinator main.cpp)
 
 add_library(Tree ../Tree/Tree.cpp)
 
-target_link_libraries(Akinator Tree)
+target_link_libraries(Akinator Tree ncurses)
