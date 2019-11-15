@@ -1,0 +1,31 @@
+digraph {
+node0x5591fbe02ec0 [label="Дедлайны горят?", shape=box];
+node0x5591fbe02ef0 [label="Тебя отчислили?", shape=box];
+node0x5591fbe03040 [label="Успеешь подготовиться??", shape=box];
+node0x5591fbe02ec0 -> node0x5591fbe02ef0 [color="red", label="Нет"];
+node0x5591fbe02ec0 -> node0x5591fbe03040 [color="green", label="Да"];
+node0x5591fbe03070 [label="обратим?", shape=box];
+node0x5591fbe03160 [label="Ботать ", shape=box];
+node0x5591fbe03040 -> node0x5591fbe03070 [color="red", label="Нет"];
+node0x5591fbe03040 -> node0x5591fbe03160 [color="green", label="Да"];
+node0x5591fbe030a0 [label="более попсово?", shape=box];
+node0x5591fbe03130 [label="академ ", shape=box];
+node0x5591fbe03070 -> node0x5591fbe030a0 [color="red", label="Нет"];
+node0x5591fbe03070 -> node0x5591fbe03130 [color="green", label="Да"];
+node0x5591fbe030d0 [label="Кэ Пэ эМ ", shape=box];
+node0x5591fbe03100 [label="вены ", shape=box];
+node0x5591fbe030a0 -> node0x5591fbe030d0 [color="red", label="Нет"];
+node0x5591fbe030a0 -> node0x5591fbe03100 [color="green", label="Да"];
+node0x5591fbe02f20 [label="Печень в порядке?", shape=box];
+node0x5591fbe03010 [label="Уйти в запой ", shape=box];
+node0x5591fbe02ef0 -> node0x5591fbe02f20 [color="red", label="Нет"];
+node0x5591fbe02ef0 -> node0x5591fbe03010 [color="green", label="Да"];
+node0x5591fbe02f50 [label="Немного выпить (лимонада) ", shape=box];
+node0x5591fbe02f80 [label="зожно?", shape=box];
+node0x5591fbe02f20 -> node0x5591fbe02f50 [color="red", label="Нет"];
+node0x5591fbe02f20 -> node0x5591fbe02f80 [color="green", label="Да"];
+node0x5591fbe02fb0 [label="Немного выпить ", shape=box];
+node0x5591fbe02fe0 [label="кекнуть ", shape=box];
+node0x5591fbe02f80 -> node0x5591fbe02fb0 [color="red", label="Нет"];
+node0x5591fbe02f80 -> node0x5591fbe02fe0 [color="green", label="Да"];
+}

@@ -28,13 +28,15 @@ enum VOICES {
 };
 const int KEY_ACTUAL_ENTER = 10;
 
-size_t MAX_VOICE_SIZE = 10;
-size_t MAX_EMOTION_SIZE = 7;
-size_t MAX_DUMMY_SIZE = 30;
+const size_t MAX_VOICE_SIZE = 10;
+const size_t MAX_EMOTION_SIZE = 7;
+const size_t MAX_DUMMY_SIZE = 30;
 
-size_t SUBQUESTION_SIZE = 65;
+const size_t SUBQUESTION_SIZE = 65;
 
-size_t MAX_LINE_SIZE = 129;
+const size_t MAX_LINE_SIZE = 129;
+
+const char *DECISION_TREE_PATH = "decisionTreeSerialized.txt";
 
 enum EMOTIONS {
     GOOD,
@@ -50,14 +52,22 @@ void *deserializePrompt(char *ser);
 
 void say(const char *prompt, VOICES voice, EMOTIONS emotion);
 
-void akinatorPlayNode(node_t *node);
+void akinatorPlayNode(tree_t *decisionTree, node_t *node);
 
 int askMode();
+
+void sayAndPrintw(char *str);
+
+void drawDecisionTree(tree_t *tree, char *filename);
+
+int askArbitraryMode(const char **modes, int numberOfModes);
+
+char **getObjects(tree_t decisionTree);
 
 int main() {
     setlocale(LC_ALL, "");
     initscr();
-    char *serializedDT = loadFile("decisionTreeSerialized.txt");
+    char *serializedDT = loadFile(DECISION_TREE_PATH);
     tree_t *decisionTree = treeDeserialize(serializedDT, deserializePrompt);
     printw("Привет! Пожалуйста, выбери режим работы:\n");
     say("Привет! Пожалуйста, выбери режим работы", ALENA, NEUTRAL);
@@ -69,8 +79,15 @@ int main() {
         switch (mode) {
             case PLAY:
                 addch('\n');
-                akinatorPlayNode(decisionTree->head);
+                akinatorPlayNode(decisionTree, decisionTree->head);
                 break;
+
+            case PRINT:
+                drawDecisionTree(decisionTree, "dt.dot");
+                addch('\n');
+                sayAndPrintw("Дерево решений в формате DOT сохранено в файл dt.dot. Что дальше?\n");
+                break;
+
             default:
                 say("Простите, но эта фича не имплементирована", ALENA, NEUTRAL);
                 getyx(stdscr, y, x);
@@ -84,8 +101,69 @@ int main() {
     return 0;
 }
 
+char **getObjects(tree_t *tree, int *num) {
+    assert(tree);
+
+    char **objs = (char **) calloc(tree->size, sizeof(char *));
+}
+
+void sayAndPrintw(char *str) {
+    printw("%s", str);
+    refresh();
+    say(str, ALENA, NEUTRAL);
+}
+
 void *deserializePrompt(char *ser) {
     return ser;
+}
+
+char *serializePrompt(void *ser) {
+    return (char *) ser;
+}
+
+int askArbitraryMode(const char **modes, int numberOfModes) {
+    curs_set(0);
+    keypad(stdscr, true);
+    noecho();
+
+    int pos = 0;
+    int ch = 0;
+    int x = 0;
+    int y = 0;
+    getyx(stdscr, y, x);
+
+    while (ch != KEY_ACTUAL_ENTER) {
+        switch (ch) {
+            case KEY_RIGHT:
+                pos++;
+                break;
+            case KEY_LEFT:
+                pos--;
+                break;
+        }
+
+        if (pos == -1) pos = numberOfModes - 1;
+        else if (pos == numberOfModes) pos = 0;
+
+
+        wmove(stdscr, y, x);
+        for (int i = 0; i < numberOfModes; i++) {
+            if (i == pos)
+                attron(A_STANDOUT);
+
+            printw(modes[i]);
+
+            if (i == pos)
+                attroff(A_STANDOUT);
+
+            addch(' ');
+        }
+        refresh();
+        ch = wgetch(stdscr);
+    }
+    keypad(stdscr, false);
+    echo();
+    return pos;
 }
 
 int askMode() {
@@ -271,14 +349,50 @@ void say(const char *prompt, VOICES voice, EMOTIONS emotion) {
     free(request);
 }
 
-void addSplitRoutine(node_t *node) {
-    printw("Что вы задали?");
-    refresh();
-    printw("Я загадал: ");
-    getline()
+void addSplitRoutine(tree_t *decisionTree, node_t *node) {
+    char answerWrapper[2 * MAX_LINE_SIZE] = "";
+    char *ans = (char *) calloc(MAX_LINE_SIZE, sizeof(char));
+    char *diff = (char *) calloc(MAX_LINE_SIZE, sizeof(char));
+
+    int correct = false;
+    while (!correct) {
+        sayAndPrintw("Что вы загадали?\n");
+        refresh();
+        curs_set(1);
+        printw("Я загадал: ");
+        getstr(ans);
+
+        // TODO check whether answer is already in tree
+        sprintf(answerWrapper, "Чем %s отличается от %s? Пожалуйста, не используйте в ответе частицу НЕ.\n", ans,
+                (char *) node->value);
+        sayAndPrintw(answerWrapper);
+        refresh();
+        curs_set(1);
+        getstr(diff);
+
+        sprintf(answerWrapper, "Ваш ответ: %s\n", ans);
+        sayAndPrintw(answerWrapper);
+        sprintf(answerWrapper, "Если бы вы загадали это, вы бы положительно ответили на вопрос %s, верно?\n", diff);
+        sayAndPrintw(answerWrapper);
+
+        correct = askYesNo();
+    }
+    node_t *newAnswer = makeNode(nullptr, nullptr, nullptr, ans);
+    node_t *newNode = makeNode(node->parent, node, newAnswer, diff);
+    if (node->parent->left == node)
+        node->parent->left = newNode;
+    else
+        node->parent->right = newNode;
+
+    node->parent = newNode;
+    newAnswer->parent = newNode;
+
+    treeSerialize(decisionTree, (char *) DECISION_TREE_PATH, serializePrompt);
+
+    sayAndPrintw("База данных успешно пополнена! Спасибо!\n");
 }
 
-void akinatorPlayNode(node_t *node) {
+void akinatorPlayNode(tree_t *decisionTree, node_t *node) {
     assert(node);
     int ans = -1;
     if (!node->right && !node->left) {
@@ -292,6 +406,8 @@ void akinatorPlayNode(node_t *node) {
         if (ans) {
             printw("Так и знала! Что будем делать дальше?\n");
             say("Так и знала! Что будем делать дальше?", ALENA, NEUTRAL);
+        } else {
+            addSplitRoutine(decisionTree, node);
         }
 
     } else {
@@ -304,9 +420,45 @@ void akinatorPlayNode(node_t *node) {
         ans = askYesNo();
 
         if (ans)
-            akinatorPlayNode(node->right);
+            akinatorPlayNode(decisionTree, node->right);
         else
-            akinatorPlayNode(node->left);
+            akinatorPlayNode(decisionTree, node->left);
     }
 
+}
+
+void printNode(node_t *node, FILE *dotFile) {
+    fprintf(dotFile, "node%p [label=\"%s%c\", shape=box];\n", node, (char *) node->value,
+            node->left && node->right ? '?' : ' ');
+}
+
+void drawNode(node_t *node, FILE *dotFile) {
+    assert(node);
+    assert(dotFile);
+
+    if (node->left && node->right) {
+        printNode(node->left, dotFile);
+        printNode(node->right, dotFile);
+
+        fprintf(dotFile, "node%p -> node%p [color=\"red\", label=\"Нет\"];\n", node, node->left);
+        fprintf(dotFile, "node%p -> node%p [color=\"green\", label=\"Да\"];\n", node, node->right);
+
+        drawNode(node->right, dotFile);
+        drawNode(node->left, dotFile);
+    }
+
+}
+
+void drawDecisionTree(tree_t *tree, char *filename) {
+    assert(tree);
+    assert(filename);
+
+    FILE *dotFile = fopen(filename, "w");
+    fprintf(dotFile, "digraph {\n");
+
+    printNode(tree->head, dotFile);
+    drawNode(tree->head, dotFile);
+
+    fprintf(dotFile, "}\n");
+    fclose(dotFile);
 }
