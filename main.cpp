@@ -80,48 +80,6 @@ int main() {
 
     sayAndPrintw("Привет! Пожалуйста, выбери режим работы:\n");
 
-//
-//    node_t **nodes = nullptr;
-//    char **names = nullptr;
-//    int count = 0;
-//    int mode = 0;
-//    int y = 0;
-//    int x = 0;
-//    int ans1 = 0;
-//    int ans2 = 0;
-//    while ((mode = askMode()) != 3) {
-//        switch (mode) { // TODO separate into functions
-//            case PLAY:
-//                akinatorPlayNode(decisionTree, decisionTree->head);
-//                break;
-//
-//            case PRINT:
-//                drawDecisionTree(decisionTree, "dt.dot");
-//                sayAndPrintw("Дерево решений в формате DOT сохранено в файл dt.dot. Что дальше?\n");
-//                break;
-//
-//            case COMPARE:
-//                sayAndPrintw("Список доступных для сравнения объектов:\n");
-//                count = 0;
-//                nodes = getObjects(decisionTree, &count);
-//                names = getValues(nodes, count);
-//                sayAndPrintwArray(names, count);
-//                sayAndPrintw("Выберите первый объект:\n");
-//                ans1 = askArbitraryMode(names, count);
-//                sayAndPrintw("Выберите второй объект:\n");
-//                ans2 = askArbitraryMode(names, count);
-//                showDifference(decisionTree, nodes[ans1], nodes[ans2]);
-//                break;
-//
-//            default:
-//                say("Простите, но эта фича не имплементирована", ALENA, NEUTRAL);
-//                getyx(stdscr, y, x);
-//                move(y, 1);
-//                break;
-//        }
-//        clear();
-//    }
-
     while(gameMaster(decisionTree)) {
         clear();
     }
@@ -153,7 +111,9 @@ int gameMaster(tree_t *decisionTree) {
 
         case PRINT:
             drawDecisionTree(decisionTree, "dt.dot");
-            sayAndPrintw("Дерево решений в формате DOT сохранено в файл dt.dot. Что дальше?\n");
+            system("dot -O -Tpng dt.dot");
+            system("feh dt.dot.png");
+            sayAndPrintw("Что дальше?\n");
             break;
 
         case COMPARE:
