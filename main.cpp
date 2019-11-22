@@ -68,6 +68,8 @@ node_t **getObjects(tree_t *decisionTree, int *counter);
 
 void sayAndPrintwArray(char **lines, int count);
 
+void printwArray(char **lines, int count);
+
 void showDifference(tree_t *tree, node_t *node1, node_t *node2);
 
 int gameMaster(tree_t *decisionTree);
@@ -121,7 +123,7 @@ int gameMaster(tree_t *decisionTree) {
             count = 0;
             nodes = getObjects(decisionTree, &count);
             names = getValues(nodes, count);
-            sayAndPrintwArray(names, count);
+            printwArray(names, count);
             sayAndPrintw("Выберите первый объект:\n");
             ans1 = askArbitraryMode(names, count);
             sayAndPrintw("Выберите второй объект:\n");
@@ -211,16 +213,15 @@ void enumerateProperties(node_t *lca, node_t *node, unsigned long long path) {
     char textBuf[MAX_LINE_SIZE] = "";
     while (lca != node) {
         if (path % 2 == 0) {
-            sprintf(textBuf, "не %s ", lca->value);
+            sprintf(textBuf, " не %s", lca->value);
             lca = lca->left;
         } else {
-            sprintf(textBuf, "%s ", lca->value);
+            sprintf(textBuf, " %s", lca->value);
             lca = lca->right;
         }
         path = path >> 1;
         sayAndPrintw(textBuf);
     }
-    addch('\n');
 }
 
 void showDifference(tree_t *tree, node_t *node1, node_t *node2) {
@@ -237,29 +238,37 @@ void showDifference(tree_t *tree, node_t *node1, node_t *node2) {
 
 
     if (lca != tree->head) {
-        sprintf(textBuf, "%s и %s схожи тем, что они:\n", node1->value, node2->value);
+        sprintf(textBuf, "И %s, и %s", node1->value, node2->value);
         sayAndPrintw(textBuf);
+        attron(A_BOLD);
         while (tmp != tree->head) {
             if (tmp->parent->right == tmp) {
-                sprintf(textBuf, "%s\n", tmp->parent->value);
+                sprintf(textBuf, " %s", tmp->parent->value);
             } else {
-                sprintf(textBuf, "Не %s\n", tmp->parent->value);
+                sprintf(textBuf, " не %s", tmp->parent->value);
             }
             sayAndPrintw(textBuf);
-
             tmp = tmp->parent;
         }
+        attroff(A_BOLD);
+        addch('\n');
     }
 
     if (node1 != node2) {
-        sprintf(textBuf, "Отличия %s от %s: ", node1->value, node2->value);
+        sprintf(textBuf, "%s", node1->value);
         sayAndPrintw(textBuf);
 
+        attron(A_BOLD);
         enumerateProperties(lca, node1, path1);
+        attroff(A_BOLD);
 
-        sprintf(textBuf, "В свою очередь, отличия %s от %s: ", node2->value, node1->value);
+        sprintf(textBuf, ", а %s", node2->value, node1->value);
         sayAndPrintw(textBuf);
+
+        attron(A_BOLD);
         enumerateProperties(lca, node2, path2);
+        attroff(A_BOLD);
+        addch('\n');
     }
 }
 
@@ -287,6 +296,13 @@ node_t **getObjects(tree_t *tree, int *counter) {
 void sayAndPrintwArray(char **lines, int count) {
     for (int i = 0; i < count; i++) {
         sayAndPrintw(lines[i]);
+        addch('\n');
+    }
+}
+
+void printwArray(char **lines, int count) {
+    for (int i = 0; i < count; i++) {
+        printw("%s", lines[i]);
         addch('\n');
     }
 }
