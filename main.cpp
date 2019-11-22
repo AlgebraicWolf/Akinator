@@ -34,7 +34,7 @@ const size_t MAX_DUMMY_SIZE = 30;
 
 const size_t SUBQUESTION_SIZE = 65;
 
-const size_t MAX_LINE_SIZE = 129;
+const size_t MAX_LINE_SIZE = 256;
 
 const char *DECISION_TREE_PATH = "decisionTreeSerialized.txt";
 
@@ -60,51 +60,285 @@ void sayAndPrintw(char *str);
 
 void drawDecisionTree(tree_t *tree, char *filename);
 
-int askArbitraryMode(const char **modes, int numberOfModes);
+int askArbitraryMode(char **modes, int numberOfModes);
 
-char **getObjects(tree_t decisionTree);
+char **getValues(node_t **nodes, int num);
+
+node_t **getObjects(tree_t *decisionTree, int *counter);
+
+void sayAndPrintwArray(char **lines, int count);
+
+void showDifference(tree_t *tree, node_t *node1, node_t *node2);
+
+int gameMaster(tree_t *decisionTree);
 
 int main() {
     setlocale(LC_ALL, "");
     initscr();
     char *serializedDT = loadFile(DECISION_TREE_PATH);
     tree_t *decisionTree = treeDeserialize(serializedDT, deserializePrompt);
-    printw("Привет! Пожалуйста, выбери режим работы:\n");
-    say("Привет! Пожалуйста, выбери режим работы", ALENA, NEUTRAL);
 
-    int mode = 0;
-    int y = 0;
-    int x = 0;
-    while ((mode = askMode()) != 3) {
-        switch (mode) {
-            case PLAY:
-                addch('\n');
-                akinatorPlayNode(decisionTree, decisionTree->head);
-                break;
+    sayAndPrintw("Привет! Пожалуйста, выбери режим работы:\n");
 
-            case PRINT:
-                drawDecisionTree(decisionTree, "dt.dot");
-                addch('\n');
-                sayAndPrintw("Дерево решений в формате DOT сохранено в файл dt.dot. Что дальше?\n");
-                break;
+//
+//    node_t **nodes = nullptr;
+//    char **names = nullptr;
+//    int count = 0;
+//    int mode = 0;
+//    int y = 0;
+//    int x = 0;
+//    int ans1 = 0;
+//    int ans2 = 0;
+//    while ((mode = askMode()) != 3) {
+//        switch (mode) { // TODO separate into functions
+//            case PLAY:
+//                akinatorPlayNode(decisionTree, decisionTree->head);
+//                break;
+//
+//            case PRINT:
+//                drawDecisionTree(decisionTree, "dt.dot");
+//                sayAndPrintw("Дерево решений в формате DOT сохранено в файл dt.dot. Что дальше?\n");
+//                break;
+//
+//            case COMPARE:
+//                sayAndPrintw("Список доступных для сравнения объектов:\n");
+//                count = 0;
+//                nodes = getObjects(decisionTree, &count);
+//                names = getValues(nodes, count);
+//                sayAndPrintwArray(names, count);
+//                sayAndPrintw("Выберите первый объект:\n");
+//                ans1 = askArbitraryMode(names, count);
+//                sayAndPrintw("Выберите второй объект:\n");
+//                ans2 = askArbitraryMode(names, count);
+//                showDifference(decisionTree, nodes[ans1], nodes[ans2]);
+//                break;
+//
+//            default:
+//                say("Простите, но эта фича не имплементирована", ALENA, NEUTRAL);
+//                getyx(stdscr, y, x);
+//                move(y, 1);
+//                break;
+//        }
+//        clear();
+//    }
 
-            default:
-                say("Простите, но эта фича не имплементирована", ALENA, NEUTRAL);
-                getyx(stdscr, y, x);
-                move(y, 1);
-                break;
-        }
+    while(gameMaster(decisionTree)) {
+        clear();
     }
 
-    say("Всего доброго!", ALENA, NEUTRAL);
+    sayAndPrintw("Всего доброго!\n");
     endwin();
+
+    deleteTree(decisionTree);
+    free(serializedDT);
     return 0;
 }
 
-char **getObjects(tree_t *tree, int *num) {
-    assert(tree);
+int gameMaster(tree_t *decisionTree) {
+    assert(decisionTree);
 
-    char **objs = (char **) calloc(tree->size, sizeof(char *));
+    node_t **nodes = nullptr;
+    char **names = nullptr;
+    int count = 0;
+    int y = 0;
+    int x = 0;
+    int ans1 = 0;
+    int ans2 = 0;
+
+    int mode = askMode();
+    switch (mode) { // TODO separate into functions
+        case PLAY:
+            akinatorPlayNode(decisionTree, decisionTree->head);
+            break;
+
+        case PRINT:
+            drawDecisionTree(decisionTree, "dt.dot");
+            sayAndPrintw("Дерево решений в формате DOT сохранено в файл dt.dot. Что дальше?\n");
+            break;
+
+        case COMPARE:
+            sayAndPrintw("Список доступных для сравнения объектов:\n");
+            count = 0;
+            nodes = getObjects(decisionTree, &count);
+            names = getValues(nodes, count);
+            sayAndPrintwArray(names, count);
+            sayAndPrintw("Выберите первый объект:\n");
+            ans1 = askArbitraryMode(names, count);
+            sayAndPrintw("Выберите второй объект:\n");
+            ans2 = askArbitraryMode(names, count);
+            showDifference(decisionTree, nodes[ans1], nodes[ans2]);
+            break;
+
+        case EXIT:
+            return false;
+
+        default:
+            say("Простите, но эта фича не имплементирована", ALENA, NEUTRAL);
+            getyx(stdscr, y, x);
+            move(y, 1);
+            break;
+    }
+    return true;
+}
+
+node_t **findNullptr(node_t **objs) {
+    while (*objs) objs++;
+    return objs;
+}
+
+int nodeDepth(tree_t *tree, node_t *node) {
+    assert(tree);
+    assert(node);
+
+    int depth = 0;
+    while (node != tree->head) {
+        depth++;
+        node = node->parent;
+    }
+
+    return depth;
+}
+
+node_t *
+findLCA(tree_t *tree, node_t *node1, node_t *node2, unsigned long long *node1Path, unsigned long long *node2Path) {
+    assert(tree);
+    assert(node1);
+    assert(node2);
+
+    int depth1 = nodeDepth(tree, node1);
+    int depth2 = nodeDepth(tree, node2);
+
+    *node1Path = 0;
+    *node2Path = 0;
+
+    while (depth1 != depth2) {
+        if (depth1 > depth2) {
+            depth1--;
+
+            *node1Path = (*node1Path) << 1;
+            if (node1 == node1->parent->right)
+                (*node1Path)++;
+
+            node1 = node1->parent;
+        } else {
+            depth2--;
+
+            *node2Path = (*node2Path) << 1;
+            if (node2 == node2->parent->right)
+                (*node2Path)++;
+
+            node2 = node2->parent;
+        }
+    }
+
+    while (node1 != node2) {
+        *node1Path = (*node1Path) << 1;
+        if (node1 == node1->parent->right)
+            (*node1Path)++;
+
+        node1 = node1->parent;
+
+        *node2Path = (*node2Path) << 1;
+        if (node2 == node2->parent->right)
+            (*node2Path)++;
+
+        node2 = node2->parent;
+    }
+    return node1;
+}
+
+void enumerateProperties(node_t *lca, node_t *node, unsigned long long path) {
+    char textBuf[MAX_LINE_SIZE] = "";
+    while (lca != node) {
+        if (path % 2 == 0) {
+            sprintf(textBuf, "не %s ", lca->value);
+            lca = lca->left;
+        } else {
+            sprintf(textBuf, "%s ", lca->value);
+            lca = lca->right;
+        }
+        path = path >> 1;
+        sayAndPrintw(textBuf);
+    }
+    addch('\n');
+}
+
+void showDifference(tree_t *tree, node_t *node1, node_t *node2) {
+    assert(tree);
+    assert(node1);
+    assert(node2);
+
+    char textBuf[MAX_LINE_SIZE] = "";
+
+    unsigned long long path1 = 0;
+    unsigned long long path2 = 0;
+    node_t *lca = findLCA(tree, node1, node2, &path1, &path2);
+    node_t *tmp = lca;
+
+
+    if (lca != tree->head) {
+        sprintf(textBuf, "%s и %s схожи тем, что они:\n", node1->value, node2->value);
+        sayAndPrintw(textBuf);
+        while (tmp != tree->head) {
+            if (tmp->parent->right == tmp) {
+                sprintf(textBuf, "%s\n", tmp->parent->value);
+            } else {
+                sprintf(textBuf, "Не %s\n", tmp->parent->value);
+            }
+            sayAndPrintw(textBuf);
+
+            tmp = tmp->parent;
+        }
+    }
+
+    if (node1 != node2) {
+        sprintf(textBuf, "Отличия %s от %s: ", node1->value, node2->value);
+        sayAndPrintw(textBuf);
+
+        enumerateProperties(lca, node1, path1);
+
+        sprintf(textBuf, "В свою очередь, отличия %s от %s: ", node2->value, node1->value);
+        sayAndPrintw(textBuf);
+        enumerateProperties(lca, node2, path2);
+    }
+}
+
+void addNodetoArray(node_t *node, node_t **objs, int *num) {
+    if (!node->left && !node->right) {
+        objs = findNullptr(objs);
+        *objs = node;
+        (*num)++;
+    } else {
+        addNodetoArray(node->left, objs, num);
+        addNodetoArray(node->right, objs, num);
+    }
+}
+
+node_t **getObjects(tree_t *tree, int *counter) {
+    assert(tree);
+    *counter = 0;
+
+    node_t **objs = (node_t **) calloc(tree->size / 2 + 1, sizeof(char *));
+    addNodetoArray(tree->head, objs, counter);
+
+    return objs;
+}
+
+void sayAndPrintwArray(char **lines, int count) {
+    for (int i = 0; i < count; i++) {
+        sayAndPrintw(lines[i]);
+        addch('\n');
+    }
+}
+
+char **getValues(node_t **nodes, int num) {
+    assert(nodes);
+    char **names = (char **) calloc(num, sizeof(char *));
+    for (int i = 0; i < num; i++) {
+        names[i] = (char *) nodes[i]->value;
+    }
+
+    return names;
 }
 
 void sayAndPrintw(char *str) {
@@ -121,7 +355,7 @@ char *serializePrompt(void *ser) {
     return (char *) ser;
 }
 
-int askArbitraryMode(const char **modes, int numberOfModes) {
+int askArbitraryMode(char **modes, int numberOfModes) {
     curs_set(0);
     keypad(stdscr, true);
     noecho();
@@ -147,6 +381,7 @@ int askArbitraryMode(const char **modes, int numberOfModes) {
 
 
         wmove(stdscr, y, x);
+        printw("| ");
         for (int i = 0; i < numberOfModes; i++) {
             if (i == pos)
                 attron(A_STANDOUT);
@@ -156,116 +391,30 @@ int askArbitraryMode(const char **modes, int numberOfModes) {
             if (i == pos)
                 attroff(A_STANDOUT);
 
-            addch(' ');
+            printw(" | ");
         }
         refresh();
         ch = wgetch(stdscr);
     }
+    mvprintw(y, x, "Вы выбрали: %s", modes[pos]);
+    addch('\n');
     keypad(stdscr, false);
     echo();
     return pos;
 }
 
 int askMode() {
-    char modes[][20] = {"Играть", "Сравнить", "Дерево", "Выйти"};
+    char *modes[4] = {"Играть", "Сравнить", "Дерево", "Выйти"};
     int modes_num = 4;
-
-    curs_set(0);
-    keypad(stdscr, true);
-    noecho();
-
-    int pos = 0;
-    int ch = 0;
-    int x = 0;
-    int y = 0;
-    getyx(stdscr, y, x);
-
-    while (ch != KEY_ACTUAL_ENTER) {
-        switch (ch) {
-            case KEY_RIGHT:
-                pos++;
-                break;
-            case KEY_LEFT:
-                pos--;
-                break;
-        }
-
-        if (pos == -1) pos = modes_num - 1;
-        else if (pos == modes_num) pos = 0;
-
-
-        wmove(stdscr, y, x);
-        for (int i = 0; i < modes_num; i++) {
-            if (i == pos)
-                attron(A_STANDOUT);
-
-            printw(modes[i]);
-
-            if (i == pos)
-                attroff(A_STANDOUT);
-
-            addch(' ');
-        }
-        refresh();
-
-        ch = wgetch(stdscr);
-    }
-
-    keypad(stdscr, false);
-    echo();
-    return pos;
+    return askArbitraryMode(modes, modes_num);
 }
 
 int askYesNo() {
-    curs_set(0);
-    keypad(stdscr, true);
-    noecho();
-    int pos = 0;
-    int ch = 0;
-    int x = 0;
-    int y = 0;
-    getyx(stdscr, y, x);
-    while (ch != KEY_ACTUAL_ENTER) {
-        switch (ch) {
-            case KEY_RIGHT:
-                pos += 1;
-                break;
-
-            case KEY_LEFT:
-                pos -= 1;
-                break;
-        }
-        if (pos == 2) pos = 0;
-        else if (pos == -1) pos = 1;
-
-        if (pos == 0) {
-            attron(A_STANDOUT);
-            mvprintw(y, x, "Да");
-            attroff(A_STANDOUT);
-            printw(" Нет");
-        }
-
-        if (pos == 1) {
-            mvprintw(y, x, "Да ");
-            attron(A_STANDOUT);
-            printw("Нет");
-            attroff(A_STANDOUT);
-        }
-
-        ch = wgetch(stdscr);
-    }
-
-    keypad(stdscr, false);
-    echo();
-
-    if (pos == 0)
-        mvprintw(y, x, "Ваш ответ: Да\n");
-
-    if (pos == 1)
-        mvprintw(y, x, "Ваш ответ: Нет\n");
-    refresh();
-    return !pos;
+    char *modes[2] = {"Нет", "Да"};
+    int modes_num = 2;
+    return askArbitraryMode(modes, modes_num);
 }
+
 
 size_t getFilesize(FILE *f) {
     assert(f);
@@ -388,6 +537,7 @@ void addSplitRoutine(tree_t *decisionTree, node_t *node) {
     newAnswer->parent = newNode;
 
     treeSerialize(decisionTree, (char *) DECISION_TREE_PATH, serializePrompt);
+    decisionTree->size += 2;
 
     sayAndPrintw("База данных успешно пополнена! Спасибо!\n");
 }
@@ -398,24 +548,18 @@ void akinatorPlayNode(tree_t *decisionTree, node_t *node) {
     if (!node->right && !node->left) {
         char *str = (char *) calloc(SUBQUESTION_SIZE + strlen((char *) node->value), sizeof(char));
         sprintf(str, "Вы загадали %s, не так ли?\n", (char *) node->value);
-        printw("%s", str);
-        refresh();
-
-        say(str, ALENA, NEUTRAL);
+        sayAndPrintw(str);
         ans = askYesNo();
         if (ans) {
-            printw("Так и знала! Что будем делать дальше?\n");
-            say("Так и знала! Что будем делать дальше?", ALENA, NEUTRAL);
+            sayAndPrintw("Так и знала! Что будем делать дальше?\n");
         } else {
             addSplitRoutine(decisionTree, node);
         }
-
+        free(str);
     } else {
         char *str = (char *) calloc(SUBQUESTION_SIZE + strlen((char *) node->value), sizeof(char));
         sprintf(str, "%s?\n", (char *) node->value);
-        printw("%s", str);
-        refresh();
-        say(str, ALENA, NEUTRAL);
+        sayAndPrintw(str);
 
         ans = askYesNo();
 
@@ -423,6 +567,7 @@ void akinatorPlayNode(tree_t *decisionTree, node_t *node) {
             akinatorPlayNode(decisionTree, node->right);
         else
             akinatorPlayNode(decisionTree, node->left);
+        free(str);
     }
 
 }

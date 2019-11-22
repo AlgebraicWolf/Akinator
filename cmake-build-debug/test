@@ -1,0 +1,19 @@
+graph 1 10.097 4.125
+node node0x55bc67ef1ec0 5.0069 3.875 2.6806 0.5 "У тебя горят дедлайны?" solid box black lightgrey
+node node0x55bc67ef1ef0 4.1042 2.6667 1.2361 0.5 "Ты устал?" solid box black lightgrey
+node node0x55bc67ef1fe0 5.9236 2.6667 1.9028 0.5 "Ты волнуешься?" solid box black lightgrey
+node node0x55bc67ef2010 5.7153 1.4583 0.94444 0.5 "ботать " solid box black lightgrey
+node node0x55bc67ef2040 8.2708 1.4583 3.6528 0.5 "погладить котика и пойти ботать " solid box black lightgrey
+node node0x55bc67ef1f20 2.4653 1.4583 1.6528 0.5 "Тебе грустно?" solid box black lightgrey
+node node0x55bc67ef1fb0 4.2153 1.4583 1.3472 0.5 "выспаться " solid box black lightgrey
+node node0x55bc67ef1f50 1.2153 0.25 2.4306 0.5 "погулять по Долгопе " solid box black lightgrey
+node node0x55bc67ef1f80 3.7292 0.25 2.0972 0.5 "погладить котика " solid box black lightgrey
+edge node0x55bc67ef1ec0 node0x55bc67ef1ef0 4 4.8243 3.6222 4.6945 3.4526 4.5183 3.2221 4.3726 3.0316 Нет 4.8125 3.2708 solid red
+edge node0x55bc67ef1ec0 node0x55bc67ef1fe0 4 5.1924 3.6222 5.3241 3.4526 5.5031 3.2221 5.651 3.0316 Да 5.6597 3.2708 solid green
+edge node0x55bc67ef1ef0 node0x55bc67ef1f20 4 3.7725 2.4139 3.5248 2.2355 3.1837 1.9897 2.912 1.794 Нет 3.5903 2.0625 solid red
+edge node0x55bc67ef1ef0 node0x55bc67ef1fb0 4 4.1267 2.4139 4.1419 2.2523 4.1623 2.0354 4.1797 1.8505 Да 4.3125 2.0625 solid green
+edge node0x55bc67ef1fe0 node0x55bc67ef2010 4 5.8815 2.4139 5.8529 2.2523 5.8147 2.0354 5.782 1.8505 Нет 6.0347 2.0625 solid red
+edge node0x55bc67ef1fe0 node0x55bc67ef2040 4 6.3986 2.4139 6.7673 2.2284 7.2806 1.9703 7.6765 1.7712 Да 7.3819 2.0625 solid green
+edge node0x55bc67ef1f20 node0x55bc67ef1f50 4 2.2123 1.2055 2.0276 1.0311 1.7748 0.79235 1.57 0.59889 Нет 2.1181 0.85417 solid red
+edge node0x55bc67ef1f20 node0x55bc67ef1f80 4 2.721 1.2055 2.9078 1.0311 3.1634 0.79235 3.3705 0.59889 Да 3.3125 0.85417 solid green
+stop
